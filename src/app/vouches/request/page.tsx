@@ -1,27 +1,29 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/layout/Navbar'
-import { Button, Input, Textarea, Select, Card } from '@/components/ui'
+import { Button, Input, Card } from '@/components/ui'
 import { Shield, Copy, Check } from 'lucide-react'
 
 export default function VouchRequestPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
 
-  const [email, setEmail] = useState('')
   const [copied, setCopied] = useState(false)
+  const [vouchLink, setVouchLink] = useState('')
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      setVouchLink(`${window.location.origin}/vouch/${session.user.id}`)
+    }
+  }, [session?.user?.id])
 
   if (status === 'unauthenticated') {
     router.push('/login?callbackUrl=/vouches/request')
     return null
   }
-
-  const vouchLink = typeof window !== 'undefined'
-    ? `${window.location.origin}/vouch/${session?.user?.id}`
-    : ''
 
   const copyLink = () => {
     navigator.clipboard.writeText(vouchLink)

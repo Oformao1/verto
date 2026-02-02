@@ -77,12 +77,19 @@ export default function ProfilePage() {
   })
   const [saving, setSaving] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [referralLink, setReferralLink] = useState('')
 
   useEffect(() => {
     if (authStatus === 'unauthenticated') {
       router.push('/login?callbackUrl=/profile')
     }
   }, [authStatus, router])
+
+  useEffect(() => {
+    if (profile?.referralCode) {
+      setReferralLink(`${window.location.origin}/signup?ref=${profile.referralCode}`)
+    }
+  }, [profile?.referralCode])
 
   useEffect(() => {
     async function fetchData() {
@@ -336,7 +343,7 @@ export default function ProfilePage() {
           </p>
           <div className="flex gap-2">
             <Input
-              value={`${typeof window !== 'undefined' ? window.location.origin : ''}/signup?ref=${profile.referralCode}`}
+              value={referralLink}
               readOnly
             />
             <Button variant="outline" onClick={copyReferralLink}>

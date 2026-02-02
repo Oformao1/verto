@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Menu, X, Search, MessageSquare, MapPin, User, LogOut, Coins, ChevronDown } from 'lucide-react'
 import { Avatar } from '@/components/ui'
 
@@ -10,6 +10,14 @@ export function Navbar() {
   const { data: session, status } = useSession()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Prevent hydration mismatch by showing loading state until mounted
+  const isLoading = !mounted || status === 'loading'
 
   const navLinks = [
     { href: '/explore', label: 'Explore', icon: Search },
@@ -22,7 +30,7 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href={session ? '/dashboard' : '/'} className="flex items-center gap-2">
+          <Link href={mounted && session ? '/dashboard' : '/'} className="flex items-center gap-2">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-lg">V</span>
             </div>
@@ -45,7 +53,7 @@ export function Navbar() {
 
           {/* Desktop Auth */}
           <div className="hidden md:flex items-center gap-3">
-            {status === 'loading' ? (
+            {isLoading ? (
               <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
             ) : session ? (
               <div className="relative">
@@ -150,7 +158,7 @@ export function Navbar() {
 
               <hr className="my-2" />
 
-              {session ? (
+              {mounted && session ? (
                 <>
                   <Link
                     href="/dashboard"
