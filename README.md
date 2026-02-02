@@ -25,7 +25,7 @@ Verto is a social swapping and hosted-stays platform for remote workers and trav
 ### Prerequisites
 
 - Node.js 18+
-- PostgreSQL database
+- Docker (for PostgreSQL) or PostgreSQL database
 - npm or yarn
 
 ### Installation
@@ -41,7 +41,14 @@ cd verto
 npm install
 ```
 
-3. Set up environment variables:
+3. Start the PostgreSQL database (using Docker):
+```bash
+docker-compose up -d
+```
+
+This starts a PostgreSQL container on port 5432. The database will persist data in a Docker volume.
+
+4. Set up environment variables:
 ```bash
 cp .env.example .env
 ```
@@ -214,9 +221,9 @@ verto/
 
 ## Branding
 
-- **Primary color**: `#5e83c1` (Maximum Green/Blue)
+- **Primary color**: `#00ff00` (Maximum Green)
 - **Style**: Modern, clean, minimal
-- **Typography**: Inter font family
+- **Typography**: System fonts (San Francisco, Segoe UI, etc.)
 
 ## License
 
