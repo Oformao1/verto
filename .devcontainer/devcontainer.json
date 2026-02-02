@@ -1,0 +1,20 @@
+{
+  "name": "Verto Development",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:18",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "forwardPorts": [3000, 5432],
+  "postCreateCommand": "npm install && docker-compose up -d && sleep 5 && npx prisma generate && npx prisma db push && npm run db:seed",
+  "postStartCommand": "docker-compose up -d",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "Prisma.prisma",
+        "bradlc.vscode-tailwindcss"
+      ]
+    }
+  }
+}
