@@ -1,0 +1,302 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Core user model
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String?
+  photo         String?
+  bio           String?
+  city          String?
+  workIndustry  String?
+  socialsLink   String?
+  modeInterest  UserMode  @default(SWAPPER)
+  emailVerified Boolean   @default(false)
+  phoneVerified Boolean   @default(false)
+  referralCode  String    @unique @default(cuid())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Device fingerprint for anti-abuse
+  deviceFingerprint String?
+
+  // Relations
+  listings              Listing[]
+  bookingsAsGuest       BookingRequest[] @relation("GuestBookings")
+  bookingsAsHost        BookingRequest[] @relation("HostBookings")
+  vouchesGiven          Vouch[]          @relation("VouchFrom")
+  vouchesReceived       Vouch[]          @relation("VouchTo")
+  referralsMade         Referral[]       @relation("Referrer")
+  referredBy            Referral?        @relation("Referred")
+  creditLedgerEntries   CreditLedgerEntry[]
+  messagesSent          Message[]        @relation("Sender")
+  reviewsWritten        Review[]         @relation("Reviewer")
+  reviewsReceived       Review[]         @relation("Reviewee")
+  reportsSubmitted      Report[]         @relation("Reporter")
+  blockedUsers          UserBlock[]      @relation("Blocker")
+  blockedByUsers        UserBlock[]      @relation("Blocked")
+
+  @@map("users")
+}
+
+enum UserMode {
+  GUEST
+  HOST
+  SWAPPER
+}
+
+// Listings model
+model Listing {
+  id              String        @id @default(cuid())
+  hostId          String
+  title           String
+  city            String
+  neighborhood    String?
+  fullAddress     String        // Only shown after booking confirmed
+  spaceType       SpaceType
+  creditsPerNight Int           @default(1)
+  maxGuests       Int           @default(1)
+  amenities       String[]      // Array of amenity keys
+  houseRules      String?
+  keyAccessMethod KeyAccessMethod
+  keyInstructions String?       // Max 500 chars, shown after confirmation
+  safetyAck       Boolean       @default(false)
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  host              User              @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  photos            ListingPhoto[]
+  availabilityBlocks AvailabilityBlock[]
+  bookingRequests   BookingRequest[]
+
+  @@map("listings")
+}
+
+enum SpaceType {
+  ROOM
+  ENTIRE_PLACE
+}
+
+enum KeyAccessMethod {
+  SMART_LOCK
+  LOCKBOX
+  IN_PERSON
+  DOORMAN
+}
+
+model ListingPhoto {
+  id        String   @id @default(cuid())
+  listingId String
+  url       String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@map("listing_photos")
+}
+
+// Availability blocks (dates host is unavailable)
+model AvailabilityBlock {
+  id        String   @id @default(cuid())
+  listingId String
+  startDate DateTime
+  endDate   DateTime
+  createdAt DateTime @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@map("availability_blocks")
+}
+
+// Booking requests
+model BookingRequest {
+  id           String        @id @default(cuid())
+  listingId    String
+  guestId      String
+  hostId       String
+  startDate    DateTime
+  endDate      DateTime
+  status       BookingStatus @default(REQUESTED)
+  creditsTotal Int
+  guestMessage String?
+  purpose      StayPurpose   @default(OTHER)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  // Relations
+  listing   Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  guest     User      @relation("GuestBookings", fields: [guestId], references: [id], onDelete: Cascade)
+  host      User      @relation("HostBookings", fields: [hostId], references: [id], onDelete: Cascade)
+  messages  Message[]
+  reviews   Review[]
+
+  @@map("booking_requests")
+}
+
+enum BookingStatus {
+  REQUESTED
+  DECLINED
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum StayPurpose {
+  WORK
+  TRAVEL
+  OTHER
+}
+
+// Messaging
+model Message {
+  id        String   @id @default(cuid())
+  bookingId String
+  senderId  String
+  body      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  booking BookingRequest @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  sender  User           @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+// Reviews
+model Review {
+  id         String   @id @default(cuid())
+  bookingId  String
+  reviewerId String
+  revieweeId String
+  rating     Int      // 1-5
+  text       String?
+  createdAt  DateTime @default(now())
+
+  booking  BookingRequest @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  reviewer User           @relation("Reviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
+  reviewee User           @relation("Reviewee", fields: [revieweeId], references: [id], onDelete: Cascade)
+
+  @@unique([bookingId, reviewerId])
+  @@map("reviews")
+}
+
+// Vouching system
+model Vouch {
+  id               String           @id @default(cuid())
+  fromUserId       String
+  toUserId         String
+  relationshipType RelationshipType
+  note             String?          // Max 200 chars
+  createdAt        DateTime         @default(now())
+
+  fromUser User @relation("VouchFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser   User @relation("VouchTo", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@unique([fromUserId, toUserId])
+  @@map("vouches")
+}
+
+enum RelationshipType {
+  FRIEND
+  COWORKER
+  FAMILY
+  OTHER
+}
+
+// Referral system
+model Referral {
+  id          String         @id @default(cuid())
+  referrerId  String
+  referredId  String         @unique
+  status      ReferralStatus @default(PENDING)
+  awardedAt   DateTime?
+  createdAt   DateTime       @default(now())
+
+  referrer User @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referred User @relation("Referred", fields: [referredId], references: [id], onDelete: Cascade)
+
+  @@map("referrals")
+}
+
+enum ReferralStatus {
+  PENDING
+  COMPLETED
+  INVALID
+}
+
+// Credit ledger
+model CreditLedgerEntry {
+  id        String          @id @default(cuid())
+  userId    String
+  amount    Int             // Positive for credit, negative for debit
+  type      LedgerEntryType
+  bookingId String?
+  note      String?
+  createdAt DateTime        @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("credit_ledger_entries")
+}
+
+enum LedgerEntryType {
+  BOOKING_CONFIRMED_DEBIT
+  BOOKING_CONFIRMED_CREDIT
+  BOOKING_CANCELLED_REVERSAL
+  REFERRAL_BONUS
+  ADMIN_ADJUSTMENT
+  INITIAL_CREDIT
+}
+
+// Reports
+model Report {
+  id         String       @id @default(cuid())
+  reporterId String
+  targetType TargetType
+  targetId   String
+  category   String
+  details    String?
+  status     ReportStatus @default(PENDING)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  reporter User @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@map("reports")
+}
+
+enum TargetType {
+  USER
+  LISTING
+}
+
+enum ReportStatus {
+  PENDING
+  RESOLVED
+  DISMISSED
+}
+
+// User blocking
+model UserBlock {
+  id        String   @id @default(cuid())
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+
+  blocker User @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@map("user_blocks")
+}
