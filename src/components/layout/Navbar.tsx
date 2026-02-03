@@ -22,7 +22,7 @@ export function Navbar() {
   const navLinks = [
     { href: '/explore', label: 'Explore', icon: Search },
     { href: '/messages', label: 'Messages', icon: MessageSquare },
-    { href: '/trips', label: 'Trips', icon: MapPin },
+    { href: '/trips', label: 'Stays', icon: MapPin },
   ]
 
   return (

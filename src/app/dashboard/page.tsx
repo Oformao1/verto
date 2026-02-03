@@ -182,13 +182,13 @@ export default async function DashboardPage() {
           </Link>
         </div>
 
-        {/* Trips and hosting */}
+        {/* Stays and hosting */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Upcoming trips */}
+          {/* Upcoming stays */}
           <Card>
             <div className="p-6 border-b border-gray-100">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">Upcoming trips</h2>
+                <h2 className="text-lg font-semibold text-gray-900">Upcoming stays</h2>
                 <Link
                   href="/trips"
                   className="text-sm text-primary hover:text-primary-600"
@@ -201,7 +201,7 @@ export default async function DashboardPage() {
               {upcomingTrips.length === 0 ? (
                 <div className="text-center py-8">
                   <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">No upcoming trips</p>
+                  <p className="text-gray-500">No upcoming stays</p>
                   <Link
                     href="/explore"
                     className="mt-3 inline-flex items-center gap-1 text-primary hover:text-primary-600 text-sm"

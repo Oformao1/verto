@@ -143,8 +143,11 @@ export async function POST(request: Request) {
 
     const body = await request.json()
 
+    // Extract photos separately (not part of listing schema)
+    const { photos, ...listingData } = body
+
     // Validate input
-    const validationResult = listingSchema.safeParse(body)
+    const validationResult = listingSchema.safeParse(listingData)
     if (!validationResult.success) {
       return NextResponse.json(
         { error: validationResult.error.errors[0].message },
@@ -164,6 +167,7 @@ export async function POST(request: Request) {
       config.maxCreditsPerNight
     )
 
+    // Create listing with photos in a transaction
     const listing = await prisma.listing.create({
       data: {
         hostId: session.user.id,
@@ -179,6 +183,16 @@ export async function POST(request: Request) {
         keyAccessMethod: data.keyAccessMethod,
         keyInstructions: data.keyInstructions || null,
         safetyAck: data.safetyAck,
+        // Create photos if provided (base64 data URLs stored directly)
+        photos: photos && photos.length > 0 ? {
+          create: photos.map((photoUrl: string, index: number) => ({
+            url: photoUrl,
+            order: index,
+          })),
+        } : undefined,
+      },
+      include: {
+        photos: true,
       },
     })
 

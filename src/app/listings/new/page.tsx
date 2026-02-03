@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Navbar } from '@/components/layout/Navbar'
 import { Button, Input, Textarea, Select, Card } from '@/components/ui'
 import { config } from '@/lib/config'
+import { Camera, X, ImagePlus } from 'lucide-react'
 
 const amenitiesOptions = [
   { key: 'wifi', label: 'WiFi' },
@@ -22,13 +23,18 @@ const amenitiesOptions = [
   { key: 'pets', label: 'Pet friendly' },
 ]
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+const MAX_PHOTOS = 10
+
 export default function NewListingPage() {
   const router = useRouter()
-  const { data: session, status } = useSession()
+  const { status } = useSession()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [photos, setPhotos] = useState<string[]>([])
 
   const [formData, setFormData] = useState({
     title: '',
@@ -63,18 +69,111 @@ export default function NewListingPage() {
     }))
   }
 
+  const goToStep = (newStep: number) => {
+    setError('')
+    setStep(newStep)
+  }
+
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const img = new Image()
+        img.onload = () => {
+          const canvas = document.createElement('canvas')
+          const maxSize = 1200
+          let width = img.width
+          let height = img.height
+
+          if (width > height) {
+            if (width > maxSize) {
+              height = (height * maxSize) / width
+              width = maxSize
+            }
+          } else {
+            if (height > maxSize) {
+              width = (width * maxSize) / height
+              height = maxSize
+            }
+          }
+
+          canvas.width = width
+          canvas.height = height
+
+          const ctx = canvas.getContext('2d')
+          ctx?.drawImage(img, 0, 0, width, height)
+
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
+          resolve(dataUrl)
+        }
+        img.onerror = reject
+        img.src = e.target?.result as string
+      }
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+  }
+
+  const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    setError('')
+
+    for (const file of files) {
+      if (photos.length >= MAX_PHOTOS) {
+        setError(`Maximum ${MAX_PHOTOS} photos allowed`)
+        break
+      }
+
+      if (file.size > MAX_FILE_SIZE) {
+        setError('Photos must be under 5MB each')
+        continue
+      }
+
+      if (!file.type.startsWith('image/')) {
+        setError('Please select only image files')
+        continue
+      }
+
+      try {
+        const compressed = await compressImage(file)
+        setPhotos((prev) => [...prev, compressed])
+      } catch {
+        setError('Failed to process image')
+      }
+    }
+
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  const removePhoto = (index: number) => {
+    setPhotos((prev) => prev.filter((_, i) => i !== index))
+  }
+
   const handleSubmit = async () => {
     setError('')
     setLoading(true)
+
+    if (status !== 'authenticated') {
+      router.push('/login?callbackUrl=/listings/new')
+      return
+    }
 
     try {
       const res = await fetch('/api/listings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, photos }),
       })
 
       const data = await res.json()
+
+      if (res.status === 401) {
+        router.push('/login?callbackUrl=/listings/new')
+        return
+      }
 
       if (!res.ok) {
         setError(data.error || 'Something went wrong')
@@ -83,13 +182,14 @@ export default function NewListingPage() {
 
       router.push(`/listings/${data.listing.id}`)
     } catch {
-      setError('Something went wrong')
+      setError('Something went wrong. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
   const defaultCredits = config.defaultCredits[formData.spaceType]
+  const totalSteps = 5
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -105,7 +205,7 @@ export default function NewListingPage() {
 
         {/* Progress */}
         <div className="flex items-center gap-2 mb-8">
-          {[1, 2, 3, 4].map((s) => (
+          {Array.from({ length: totalSteps }, (_, i) => i + 1).map((s) => (
             <div
               key={s}
               className={`flex-1 h-2 rounded-full transition-colors ${
@@ -115,7 +215,7 @@ export default function NewListingPage() {
           ))}
         </div>
 
-        <Card className="p-8">
+        <Card className="p-6 sm:p-8">
           {error && (
             <div className="mb-6 p-3 rounded-lg bg-red-50 text-red-600 text-sm">
               {error}
@@ -150,19 +250,21 @@ export default function NewListingPage() {
                 ]}
               />
 
-              <Input
+              <Select
                 label="Max guests"
-                type="number"
-                min={1}
-                max={20}
-                value={formData.maxGuests}
+                value={formData.maxGuests.toString()}
                 onChange={(e) =>
-                  setFormData({ ...formData, maxGuests: parseInt(e.target.value) || 1 })
+                  setFormData({ ...formData, maxGuests: parseInt(e.target.value) })
                 }
+                options={[
+                  { value: '1', label: '1 guest' },
+                  { value: '2', label: '2 guests' },
+                  { value: '3', label: '3 guests' },
+                ]}
               />
 
               <div className="flex justify-end">
-                <Button onClick={() => setStep(2)} disabled={!formData.title}>
+                <Button onClick={() => goToStep(2)} disabled={!formData.title}>
                   Continue
                 </Button>
               </div>
@@ -200,11 +302,11 @@ export default function NewListingPage() {
               </p>
 
               <div className="flex justify-between">
-                <Button variant="outline" onClick={() => setStep(1)}>
+                <Button variant="outline" onClick={() => goToStep(1)}>
                   Back
                 </Button>
                 <Button
-                  onClick={() => setStep(3)}
+                  onClick={() => goToStep(3)}
                   disabled={!formData.city || !formData.fullAddress}
                 >
                   Continue
@@ -214,6 +316,84 @@ export default function NewListingPage() {
           )}
 
           {step === 3 && (
+            <div className="space-y-6">
+              <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
+              <p className="text-sm text-gray-500 -mt-4">
+                Add photos to help guests see your space (optional but recommended)
+              </p>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handlePhotoSelect}
+                className="hidden"
+              />
+
+              {/* Photo grid */}
+              <div className="grid grid-cols-3 gap-3">
+                {photos.map((photo, index) => (
+                  <div key={index} className="relative aspect-square">
+                    <img
+                      src={photo}
+                      alt={`Photo ${index + 1}`}
+                      className="w-full h-full object-cover rounded-lg"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(index)}
+                      className="absolute top-1 right-1 p-1.5 bg-black/50 rounded-full text-white hover:bg-black/70 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+
+                {photos.length < MAX_PHOTOS && (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="aspect-square flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary hover:bg-primary-50 transition-colors"
+                  >
+                    <ImagePlus className="w-8 h-8 text-gray-400" />
+                    <span className="text-sm text-gray-500">Add photo</span>
+                  </button>
+                )}
+              </div>
+
+              {photos.length === 0 && (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full py-8 flex flex-col items-center justify-center gap-3 border-2 border-dashed border-gray-300 rounded-xl hover:border-primary hover:bg-primary-50 transition-colors"
+                >
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                    <Camera className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <div className="text-center">
+                    <p className="font-medium text-gray-700">Add photos</p>
+                    <p className="text-sm text-gray-500">Tap to select from your camera roll</p>
+                  </div>
+                </button>
+              )}
+
+              <p className="text-xs text-gray-400 text-center">
+                Max {MAX_PHOTOS} photos, 5MB each
+              </p>
+
+              <div className="flex justify-between">
+                <Button variant="outline" onClick={() => goToStep(2)}>
+                  Back
+                </Button>
+                <Button onClick={() => goToStep(4)}>
+                  {photos.length > 0 ? 'Continue' : 'Skip for now'}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {step === 4 && (
             <div className="space-y-6">
               <h2 className="text-lg font-semibold text-gray-900">Amenities & rules</h2>
 
@@ -265,15 +445,15 @@ export default function NewListingPage() {
               />
 
               <div className="flex justify-between">
-                <Button variant="outline" onClick={() => setStep(2)}>
+                <Button variant="outline" onClick={() => goToStep(3)}>
                   Back
                 </Button>
-                <Button onClick={() => setStep(4)}>Continue</Button>
+                <Button onClick={() => goToStep(5)}>Continue</Button>
               </div>
             </div>
           )}
 
-          {step === 4 && (
+          {step === 5 && (
             <div className="space-y-6">
               <h2 className="text-lg font-semibold text-gray-900">Access & pricing</h2>
 
@@ -342,7 +522,7 @@ export default function NewListingPage() {
               </label>
 
               <div className="flex justify-between">
-                <Button variant="outline" onClick={() => setStep(3)}>
+                <Button variant="outline" onClick={() => goToStep(4)}>
                   Back
                 </Button>
                 <Button
