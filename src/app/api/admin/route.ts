@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { config } from '@/lib/config'
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 async function isAdmin(userId: string): Promise<boolean> {
   const { prisma } = await import('@/lib/prisma')

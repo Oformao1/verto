@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { reportSchema } from '@/lib/validations'
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export async function POST(request: Request) {
   try {
