@@ -16,6 +16,11 @@ function LoginForm() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  const fillDemoCredentials = () => {
+    setEmail('demo@verto.app')
+    setPassword('demo123')
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -30,9 +35,11 @@ function LoginForm() {
 
       if (result?.error) {
         setError('Invalid email or password')
-      } else {
+      } else if (result?.ok) {
         router.push(callbackUrl)
         router.refresh()
+      } else {
+        setError('Login failed. Please try again.')
       }
     } catch {
       setError('Something went wrong. Please try again.')
@@ -43,6 +50,20 @@ function LoginForm() {
 
   return (
     <div className="bg-white rounded-xl shadow-card p-8">
+      {/* Demo credentials banner */}
+      <div className="mb-6 p-4 rounded-lg bg-primary-50 border border-primary-200">
+        <p className="text-sm font-medium text-primary-800 mb-2">Demo Credentials:</p>
+        <p className="text-sm text-primary-700">Email: demo@verto.app</p>
+        <p className="text-sm text-primary-700">Password: demo123</p>
+        <button
+          type="button"
+          onClick={fillDemoCredentials}
+          className="mt-2 text-sm text-primary-600 hover:text-primary-800 underline"
+        >
+          Click to auto-fill
+        </button>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-5">
         {error && (
           <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm">
