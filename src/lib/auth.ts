@@ -3,6 +3,15 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import { compare } from 'bcryptjs'
 import { prisma } from './prisma'
 
+// Demo user for testing without database
+const DEMO_USER = {
+  id: 'demo-user-id',
+  email: 'demo@verto.app',
+  name: 'Demo User',
+  image: null,
+}
+const DEMO_PASSWORD = 'demo123'
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -16,25 +25,39 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email.toLowerCase() },
-        })
-
-        if (!user) {
-          return null
+        // Check for demo user first (works without database)
+        if (
+          credentials.email.toLowerCase() === DEMO_USER.email &&
+          credentials.password === DEMO_PASSWORD
+        ) {
+          return DEMO_USER
         }
 
-        const isPasswordValid = await compare(credentials.password, user.passwordHash)
+        // Try database authentication
+        try {
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email.toLowerCase() },
+          })
 
-        if (!isPasswordValid) {
+          if (!user) {
+            return null
+          }
+
+          const isPasswordValid = await compare(credentials.password, user.passwordHash)
+
+          if (!isPasswordValid) {
+            return null
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            image: user.photo,
+          }
+        } catch {
+          // Database not available, only demo login works
           return null
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.photo,
         }
       },
     }),
