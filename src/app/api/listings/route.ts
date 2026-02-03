@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
 import { listingSchema } from '@/lib/validations'
 import { config } from '@/lib/config'
+
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
   try {
@@ -19,6 +20,8 @@ export async function GET(request: Request) {
     // Get current user's city for ranking boost
     const session = await getServerSession(authOptions)
     let userCity: string | null = null
+
+    const { prisma } = await import('@/lib/prisma')
 
     if (session?.user?.id) {
       const user = await prisma.user.findUnique({
@@ -166,6 +169,8 @@ export async function POST(request: Request) {
       Math.max(creditsPerNight, config.minCreditsPerNight),
       config.maxCreditsPerNight
     )
+
+    const { prisma } = await import('@/lib/prisma')
 
     // Create listing with photos in a transaction
     const listing = await prisma.listing.create({

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
 import { profileSchema } from '@/lib/validations'
+
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
@@ -11,6 +12,8 @@ export async function GET() {
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const { prisma } = await import('@/lib/prisma')
 
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
@@ -63,6 +66,8 @@ export async function PUT(request: Request) {
 
     const { name, bio, city, workIndustry, socialsLink, modeInterest } = validationResult.data
 
+    const { prisma } = await import('@/lib/prisma')
+
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
       data: {
@@ -89,6 +94,8 @@ export async function PUT(request: Request) {
 }
 
 async function checkAndCompleteReferral(userId: string) {
+  const { prisma } = await import('@/lib/prisma')
+
   const user = await prisma.user.findUnique({
     where: { id: userId },
     include: {

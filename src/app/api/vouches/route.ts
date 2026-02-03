@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
 import { vouchSchema } from '@/lib/validations'
 import { config } from '@/lib/config'
+
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
   try {
@@ -13,6 +14,8 @@ export async function GET(request: Request) {
     if (!userId) {
       return NextResponse.json({ error: 'userId is required' }, { status: 400 })
     }
+
+    const { prisma } = await import('@/lib/prisma')
 
     const vouches = await prisma.vouch.findMany({
       where: { toUserId: userId },
@@ -59,6 +62,8 @@ export async function POST(request: Request) {
         { status: 400 }
       )
     }
+
+    const { prisma } = await import('@/lib/prisma')
 
     // Check if user exists
     const targetUser = await prisma.user.findUnique({

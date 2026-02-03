@@ -3,6 +3,8 @@ import { signUpSchema } from '@/lib/validations'
 import { generateDeviceFingerprint } from '@/lib/utils'
 import { headers } from 'next/headers'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()

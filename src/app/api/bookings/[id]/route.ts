@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
-import { processBookingCredits, reverseBookingCredits, getUserCreditBalance } from '@/lib/credits'
 import { config } from '@/lib/config'
+
+export const dynamic = 'force-dynamic'
 
 export async function GET(
   request: Request,
@@ -16,6 +16,8 @@ export async function GET(
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const { prisma } = await import('@/lib/prisma')
 
     const booking = await prisma.bookingRequest.findUnique({
       where: { id },
@@ -84,6 +86,9 @@ export async function PUT(
 
     const body = await request.json()
     const { action } = body // 'accept', 'decline', 'cancel', 'complete'
+
+    const { prisma } = await import('@/lib/prisma')
+    const { processBookingCredits, reverseBookingCredits, getUserCreditBalance } = await import('@/lib/credits')
 
     const booking = await prisma.bookingRequest.findUnique({
       where: { id },

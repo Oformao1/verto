@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { getUserHostTier } from '@/lib/tiers'
+
+export const dynamic = 'force-dynamic'
 
 export async function GET(
   request: Request,
@@ -8,6 +8,9 @@ export async function GET(
 ) {
   try {
     const { id } = await params
+
+    const { prisma } = await import('@/lib/prisma')
+    const { getUserHostTier } = await import('@/lib/tiers')
 
     const user = await prisma.user.findUnique({
       where: { id },

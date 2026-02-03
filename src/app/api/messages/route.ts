@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
 import { messageSchema } from '@/lib/validations'
+
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
   try {
@@ -14,6 +15,8 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url)
     const bookingId = searchParams.get('bookingId')
+
+    const { prisma } = await import('@/lib/prisma')
 
     if (bookingId) {
       // Get messages for a specific booking
@@ -122,6 +125,8 @@ export async function POST(request: Request) {
     }
 
     const { bookingId, body: messageBody } = validationResult.data
+
+    const { prisma } = await import('@/lib/prisma')
 
     // Check booking exists and user is participant
     const booking = await prisma.bookingRequest.findUnique({

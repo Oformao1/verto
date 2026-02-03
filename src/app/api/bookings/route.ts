@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
 import { bookingRequestSchema } from '@/lib/validations'
-import { getUserCreditBalance } from '@/lib/credits'
 import { calculateNights } from '@/lib/utils'
+
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
   try {
@@ -29,6 +29,8 @@ export async function GET(request: Request) {
     if (status) {
       where.status = status
     }
+
+    const { prisma } = await import('@/lib/prisma')
 
     const bookings = await prisma.bookingRequest.findMany({
       where,
@@ -75,6 +77,9 @@ export async function POST(request: Request) {
     }
 
     const { listingId, startDate, endDate, guestMessage, purpose } = validationResult.data
+
+    const { prisma } = await import('@/lib/prisma')
+    const { getUserCreditBalance } = await import('@/lib/credits')
 
     // Fetch listing
     const listing = await prisma.listing.findUnique({

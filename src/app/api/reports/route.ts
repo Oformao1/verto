@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
 import { reportSchema } from '@/lib/validations'
+
+export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
   try {
@@ -24,6 +25,8 @@ export async function POST(request: Request) {
     }
 
     const { targetType, targetId, category, details } = validationResult.data
+
+    const { prisma } = await import('@/lib/prisma')
 
     // Verify target exists
     if (targetType === 'USER') {

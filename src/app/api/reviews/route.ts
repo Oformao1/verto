@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
 import { reviewSchema } from '@/lib/validations'
+
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
   try {
@@ -16,6 +17,8 @@ export async function GET(request: Request) {
 
     const where: Record<string, unknown> =
       role === 'reviewer' ? { reviewerId: userId } : { revieweeId: userId }
+
+    const { prisma } = await import('@/lib/prisma')
 
     const reviews = await prisma.review.findMany({
       where,
@@ -64,6 +67,8 @@ export async function POST(request: Request) {
     }
 
     const { bookingId, rating, text } = validationResult.data
+
+    const { prisma } = await import('@/lib/prisma')
 
     // Check booking exists and is completed
     const booking = await prisma.bookingRequest.findUnique({

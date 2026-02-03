@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { getUserCreditBalance, getCreditHistory } from '@/lib/credits'
+
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
@@ -10,6 +11,8 @@ export async function GET() {
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const { getUserCreditBalance, getCreditHistory } = await import('@/lib/credits')
 
     const [balance, history] = await Promise.all([
       getUserCreditBalance(session.user.id),
