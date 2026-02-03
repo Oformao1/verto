@@ -36,8 +36,8 @@ function LoginForm() {
       if (result?.error) {
         setError('Invalid email or password')
       } else if (result?.ok) {
-        router.push(callbackUrl)
-        router.refresh()
+        // Use window.location for reliable redirect after login
+        window.location.href = callbackUrl
       } else {
         setError('Login failed. Please try again.')
       }
