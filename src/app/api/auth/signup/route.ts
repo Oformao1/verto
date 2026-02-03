@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server'
-import { hash } from 'bcryptjs'
-import { prisma } from '@/lib/prisma'
 import { signUpSchema } from '@/lib/validations'
 import { generateDeviceFingerprint } from '@/lib/utils'
 import { headers } from 'next/headers'
@@ -18,6 +16,10 @@ export async function POST(request: Request) {
         { status: 400 }
       )
     }
+
+    // Dynamic imports to avoid build-time failures
+    const { prisma } = await import('@/lib/prisma')
+    const { hash } = await import('bcryptjs')
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
