@@ -1,7 +1,5 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import { compare } from 'bcryptjs'
-import { prisma } from './prisma'
 
 // Demo user for testing without database
 const DEMO_USER = {
@@ -33,8 +31,11 @@ export const authOptions: NextAuthOptions = {
           return DEMO_USER
         }
 
-        // Try database authentication
+        // Try database authentication (dynamic import to avoid breaking when DB unavailable)
         try {
+          const { prisma } = await import('./prisma')
+          const { compare } = await import('bcryptjs')
+
           const user = await prisma.user.findUnique({
             where: { email: credentials.email.toLowerCase() },
           })
