@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
 import { config } from '@/lib/config'
 
 async function isAdmin(userId: string): Promise<boolean> {
+  const { prisma } = await import('@/lib/prisma')
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { email: true },
@@ -26,6 +26,8 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url)
     const resource = searchParams.get('resource')
+
+    const { prisma } = await import('@/lib/prisma')
 
     switch (resource) {
       case 'reports': {
@@ -109,6 +111,8 @@ export async function POST(request: Request) {
 
     const body = await request.json()
     const { action } = body
+
+    const { prisma } = await import('@/lib/prisma')
 
     switch (action) {
       case 'resolveReport': {
