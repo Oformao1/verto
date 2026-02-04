@@ -22,7 +22,7 @@ export const config = {
 
   // Credits bounds
   minCreditsPerNight: 1,
-  maxCreditsPerNight: 5,
+  maxCreditsPerNight: 3,
 
   // Host tier thresholds
   tierThresholds: {

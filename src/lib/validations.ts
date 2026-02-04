@@ -26,7 +26,7 @@ export const listingSchema = z.object({
   neighborhood: z.string().optional(),
   fullAddress: z.string().min(5, 'Full address is required'),
   spaceType: z.enum(['ROOM', 'ENTIRE_PLACE']),
-  creditsPerNight: z.number().min(1).max(5),
+  creditsPerNight: z.number().min(1).max(3),
   maxGuests: z.number().min(1).max(3),
   amenities: z.array(z.string()),
   houseRules: z.string().max(1000).optional(),

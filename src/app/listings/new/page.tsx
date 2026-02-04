@@ -41,8 +41,8 @@ export default function NewListingPage() {
     city: '',
     neighborhood: '',
     fullAddress: '',
-    spaceType: 'ROOM' as 'ROOM' | 'ENTIRE_PLACE',
-    creditsPerNight: 1,
+    spaceType: 'ENTIRE_PLACE' as 'ROOM' | 'ENTIRE_PLACE',
+    creditsPerNight: 2,
     maxGuests: 1,
     amenities: [] as string[],
     houseRules: '',
@@ -188,7 +188,6 @@ export default function NewListingPage() {
     }
   }
 
-  const defaultCredits = config.defaultCredits[formData.spaceType]
   const totalSteps = 5
 
   return (
@@ -485,23 +484,27 @@ export default function NewListingPage() {
                   Credits per night
                 </label>
                 <div className="flex items-center gap-4">
+                  <span className="text-sm text-gray-500">1</span>
                   <input
                     type="range"
                     min={1}
-                    max={5}
+                    max={3}
+                    step={1}
                     value={formData.creditsPerNight}
                     onChange={(e) =>
                       setFormData({ ...formData, creditsPerNight: parseInt(e.target.value) })
                     }
-                    className="flex-1"
+                    className="flex-1 accent-primary"
                   />
-                  <span className="w-12 text-center font-semibold text-primary">
-                    {formData.creditsPerNight}
+                  <span className="text-sm text-gray-500">3</span>
+                </div>
+                <div className="flex items-center justify-center mt-2">
+                  <span className="px-3 py-1 bg-primary-50 text-primary font-semibold rounded-full">
+                    {formData.creditsPerNight} credit{formData.creditsPerNight > 1 ? 's' : ''}/night
                   </span>
                 </div>
-                <p className="text-sm text-gray-500 mt-1">
-                  Default for {formData.spaceType === 'ROOM' ? 'rooms' : 'entire places'} is{' '}
-                  {defaultCredits} credit{defaultCredits > 1 ? 's' : ''}
+                <p className="text-sm text-gray-500 mt-2 text-center">
+                  Default for entire places is 2 credits. Most hosts choose this.
                 </p>
               </div>
 
