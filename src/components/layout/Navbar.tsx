@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
 import { useState, useEffect } from 'react'
-import { Menu, X, Search, MessageSquare, MapPin, User, LogOut, Coins, ChevronDown } from 'lucide-react'
+import { Menu, X, Search, MessageSquare, MapPin, User, LogOut, Coins, ChevronDown, Repeat } from 'lucide-react'
 import { Avatar } from '@/components/ui'
 
 export function Navbar() {
@@ -21,6 +21,7 @@ export function Navbar() {
 
   const navLinks = [
     { href: '/explore', label: 'Explore', icon: Search },
+    { href: '/swaps', label: 'Swaps', icon: Repeat },
     { href: '/messages', label: 'Messages', icon: MessageSquare },
     { href: '/trips', label: 'Stays', icon: MapPin },
   ]

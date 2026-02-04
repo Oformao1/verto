@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { MVP_CITIES } from './cities'
 
 export const signUpSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -66,3 +67,23 @@ export const messageSchema = z.object({
   bookingId: z.string(),
   body: z.string().min(1, 'Message cannot be empty').max(2000),
 })
+
+// MVP city validation - must be one of the curated list
+const mvpCitySchema = z.enum(MVP_CITIES as unknown as [string, ...string[]], {
+  errorMap: () => ({ message: 'Please select a valid city from the list' }),
+})
+
+export const swapRequestSchema = z.object({
+  originCity: mvpCitySchema,
+  destinationCity: mvpCitySchema,
+  startDate: z.string().transform((s) => new Date(s)),
+  endDate: z.string().transform((s) => new Date(s)),
+  guests: z.number().min(1).max(3),
+  notes: z.string().max(500).optional(),
+}).refine(
+  (data) => data.startDate <= data.endDate,
+  { message: 'End date must be after start date', path: ['endDate'] }
+).refine(
+  (data) => data.originCity !== data.destinationCity,
+  { message: 'Origin and destination must be different', path: ['destinationCity'] }
+)

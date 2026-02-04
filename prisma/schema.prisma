@@ -43,6 +43,7 @@ model User {
   reportsSubmitted      Report[]         @relation("Reporter")
   blockedUsers          UserBlock[]      @relation("Blocker")
   blockedByUsers        UserBlock[]      @relation("Blocked")
+  swapRequests          SwapRequest[]
 
   @@map("users")
 }
@@ -299,4 +300,23 @@ model UserBlock {
 
   @@unique([blockerId, blockedId])
   @@map("user_blocks")
+}
+
+// Swap requests - people looking to swap between cities
+model SwapRequest {
+  id              String   @id @default(cuid())
+  createdByUserId String
+  originCity      String   // Must be one of MVP cities
+  destinationCity String   // Must be one of MVP cities
+  startDate       DateTime
+  endDate         DateTime
+  guests          Int      @default(1) // Max 3
+  notes           String?  // Optional short text, max 500 chars
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  createdBy User @relation(fields: [createdByUserId], references: [id], onDelete: Cascade)
+
+  @@map("swap_requests")
 }
