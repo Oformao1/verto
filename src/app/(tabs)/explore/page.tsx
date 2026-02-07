@@ -3,10 +3,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Navbar } from '@/components/layout/Navbar'
-import { Footer } from '@/components/layout/Footer'
-import { Input, Select, Card, Badge, Spinner } from '@/components/ui'
-import { Search, MapPin, Users, Coins, Home } from 'lucide-react'
+import { MobileHeader } from '@/components/layout/MobileHeader'
+import { Input, Select, Card, Badge, Spinner, Pill } from '@/components/ui'
+import { Search, MapPin, Users, Coins, Home, SlidersHorizontal } from 'lucide-react'
 import { getTierBadge } from '@/lib/tiers'
 
 interface Listing {
@@ -32,6 +31,7 @@ export default function ExplorePage() {
   const [city, setCity] = useState('')
   const [spaceType, setSpaceType] = useState('')
   const [minTier, setMinTier] = useState('')
+  const [showSearch, setShowSearch] = useState(false)
 
   const fetchListings = useCallback(async () => {
     setLoading(true)
@@ -57,78 +57,91 @@ export default function ExplorePage() {
   }, [fetchListings])
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <Navbar />
+    <>
+      <MobileHeader
+        rightAction={
+          <button
+            onClick={() => setShowSearch(!showSearch)}
+            className="p-2 rounded-full hover:bg-gray-100"
+          >
+            <Search className="w-5 h-5 text-gray-600" />
+          </button>
+        }
+      />
 
-      <main className="flex-1">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Filters */}
-          <div className="bg-white rounded-xl p-6 shadow-card mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <Input
-                  placeholder="Search by city..."
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+      <div className="px-4 py-4">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">Find hosts</h1>
 
-              <Select
-                value={spaceType}
-                onChange={(e) => setSpaceType(e.target.value)}
-                options={[
-                  { value: '', label: 'All space types' },
-                  { value: 'ROOM', label: 'Private room' },
-                  { value: 'ENTIRE_PLACE', label: 'Entire place' },
-                ]}
+        {/* Search bar - toggleable */}
+        {showSearch && (
+          <div className="mb-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Input
+                placeholder="Search by city..."
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                className="pl-10"
               />
-
-              <Select
-                value={minTier}
-                onChange={(e) => setMinTier(e.target.value)}
-                options={[
-                  { value: '', label: 'All host tiers' },
-                  { value: '1', label: 'Tier 1+' },
-                  { value: '2', label: 'Tier 2+' },
-                  { value: '3', label: 'Tier 3 (Super Hosts)' },
-                ]}
-              />
-
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <span>{listings.length} listings found</span>
-              </div>
             </div>
           </div>
+        )}
 
-          {/* Listings grid */}
-          {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <Spinner size="lg" />
-            </div>
-          ) : listings.length === 0 ? (
-            <div className="text-center py-20">
-              <Home className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No listings found
-              </h3>
-              <p className="text-gray-500">
-                Try adjusting your filters or search in a different city.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {listings.map((listing) => (
-                <ListingCard key={listing.id} listing={listing} />
-              ))}
-            </div>
-          )}
+        {/* Filter chips */}
+        <div className="flex gap-2 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
+          <Pill
+            active={spaceType === 'ENTIRE_PLACE'}
+            onClick={() => setSpaceType(spaceType === 'ENTIRE_PLACE' ? '' : 'ENTIRE_PLACE')}
+          >
+            Entire place
+          </Pill>
+          <Pill
+            active={spaceType === 'ROOM'}
+            onClick={() => setSpaceType(spaceType === 'ROOM' ? '' : 'ROOM')}
+          >
+            Private room
+          </Pill>
+          <Pill
+            active={minTier === '2'}
+            onClick={() => setMinTier(minTier === '2' ? '' : '2')}
+          >
+            Tier 2+
+          </Pill>
+          <Pill
+            active={minTier === '3'}
+            onClick={() => setMinTier(minTier === '3' ? '' : '3')}
+          >
+            Super Hosts
+          </Pill>
         </div>
-      </main>
 
-      <Footer />
-    </div>
+        {/* Results count */}
+        <p className="text-sm text-gray-500 mb-4">{listings.length} listings found</p>
+
+        {/* Listings */}
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Spinner size="lg" />
+          </div>
+        ) : listings.length === 0 ? (
+          <div className="text-center py-20">
+            <Home className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No listings found
+            </h3>
+            <p className="text-gray-500">
+              Try adjusting your filters or search in a different city.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {listings.map((listing) => (
+              <ListingCard key={listing.id} listing={listing} />
+            ))}
+          </div>
+        )}
+      </div>
+    </>
   )
 }
 
@@ -139,7 +152,7 @@ function ListingCard({ listing }: { listing: Listing }) {
   return (
     <Link href={`/listings/${listing.id}`}>
       <Card hover className="overflow-hidden">
-        <div className="relative aspect-[4/3] bg-gray-100">
+        <div className="relative aspect-[16/9] bg-gray-100">
           {listing.photos[0] ? (
             <Image
               src={photoUrl}

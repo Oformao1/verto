@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Navbar } from '@/components/layout/Navbar'
+import { MobileHeader } from '@/components/layout/MobileHeader'
 import { Card, Avatar, Badge, Spinner } from '@/components/ui'
 import { MessageSquare } from 'lucide-react'
 
@@ -27,17 +26,9 @@ interface Conversation {
 }
 
 export default function MessagesPage() {
-  const { data: session, status: authStatus } = useSession()
-  const router = useRouter()
-
+  const { status: authStatus } = useSession()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (authStatus === 'unauthenticated') {
-      router.push('/login?callbackUrl=/messages')
-    }
-  }, [authStatus, router])
 
   useEffect(() => {
     async function fetchConversations() {
@@ -57,20 +48,23 @@ export default function MessagesPage() {
     fetchConversations()
   }, [authStatus])
 
-  if (authStatus === 'loading' || loading) {
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Spinner size="lg" />
-      </div>
+      <>
+        <MobileHeader />
+        <div className="flex items-center justify-center py-20">
+          <Spinner size="lg" />
+        </div>
+      </>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <>
+      <MobileHeader />
 
-      <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-8">Messages</h1>
+      <div className="px-4 py-4">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">Messages</h1>
 
         {conversations.length === 0 ? (
           <div className="text-center py-12">
@@ -130,7 +124,7 @@ export default function MessagesPage() {
             ))}
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </>
   )
 }

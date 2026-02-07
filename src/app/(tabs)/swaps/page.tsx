@@ -3,10 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { MobileLayout } from '@/components/layout/MobileLayout'
 import { MobileHeader } from '@/components/layout/MobileHeader'
 import { Button, Card, Select, Input, Textarea, Avatar, ModalSheet, Pill } from '@/components/ui'
-import { MVP_CITIES, getCityOptions } from '@/lib/cities'
+import { getCityOptions } from '@/lib/cities'
 import { Search, SlidersHorizontal, ArrowRight, Users, Calendar, Plus, Check } from 'lucide-react'
 import { format } from 'date-fns'
 
@@ -127,7 +126,6 @@ export default function SwapsPage() {
       setActiveChips(activeChips.filter((c) => c !== chip))
       if (cityMap[chip]) setDestinationFilter('')
     } else {
-      // Clear other city chips
       const otherCityChips = Object.keys(cityMap)
       setActiveChips([...activeChips.filter(c => !otherCityChips.includes(c)), chip])
       if (cityMap[chip]) setDestinationFilter(cityMap[chip])
@@ -143,17 +141,15 @@ export default function SwapsPage() {
   const cityOptions = getCityOptions()
 
   return (
-    <MobileLayout
-      header={
-        <MobileHeader
-          rightAction={
-            <button className="p-2 rounded-full hover:bg-gray-100">
-              <Search className="w-5 h-5 text-gray-600" />
-            </button>
-          }
-        />
-      }
-    >
+    <>
+      <MobileHeader
+        rightAction={
+          <button className="p-2 rounded-full hover:bg-gray-100">
+            <Search className="w-5 h-5 text-gray-600" />
+          </button>
+        }
+      />
+
       <div className="px-4 py-4">
         {/* Page title */}
         <h1 className="text-2xl font-bold text-gray-900 mb-4">Swaps</h1>
@@ -172,7 +168,7 @@ export default function SwapsPage() {
           </button>
         </div>
 
-        {/* Filter chips - horizontally scrollable */}
+        {/* Filter chips */}
         <div className="flex gap-2 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
           {['NYC', 'Phoenix', 'Miami', 'Austin'].map((city) => (
             <Pill
@@ -244,7 +240,6 @@ export default function SwapsPage() {
                 className="p-4 cursor-pointer active:scale-[0.98] transition-transform"
                 onClick={() => router.push(`/swaps/${swap.id}`)}
               >
-                {/* User info row */}
                 <div className="flex items-center gap-3 mb-3">
                   <Avatar
                     src={swap.createdBy.photo}
@@ -271,11 +266,10 @@ export default function SwapsPage() {
                       router.push(`/swaps/${swap.id}`)
                     }}
                   >
-                    View swap
+                    View
                   </Button>
                 </div>
 
-                {/* Details row */}
                 <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
                   <div className="flex items-center gap-1.5">
                     <Calendar className="w-4 h-4" />
@@ -289,12 +283,10 @@ export default function SwapsPage() {
                   </div>
                 </div>
 
-                {/* Notes preview */}
                 {swap.notes && (
                   <p className="text-sm text-gray-500 line-clamp-1 mb-3">{swap.notes}</p>
                 )}
 
-                {/* Vouch pill */}
                 <div className="pt-3 border-t border-gray-100">
                   <Pill variant="success" size="sm">
                     <Check className="w-3 h-3 mr-1" />
@@ -436,6 +428,6 @@ export default function SwapsPage() {
           </div>
         </div>
       </ModalSheet>
-    </MobileLayout>
+    </>
   )
 }

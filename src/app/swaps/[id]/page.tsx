@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { MobileLayout } from '@/components/layout/MobileLayout'
 import { MobileHeader } from '@/components/layout/MobileHeader'
 import { Button, Card, Avatar, ModalSheet, Pill } from '@/components/ui'
 import {
@@ -100,10 +99,8 @@ export default function SwapDetailPage({ params }: { params: { id: string } }) {
 
   if (loading) {
     return (
-      <MobileLayout
-        header={<MobileHeader showBack backHref="/swaps" />}
-        showBottomNav={false}
-      >
+      <div className="min-h-screen bg-gray-50">
+        <MobileHeader showBack backHref="/swaps" />
         <div className="px-4 py-4 space-y-4">
           {[1, 2, 3].map((i) => (
             <Card key={i} className="p-4">
@@ -115,23 +112,21 @@ export default function SwapDetailPage({ params }: { params: { id: string } }) {
             </Card>
           ))}
         </div>
-      </MobileLayout>
+      </div>
     )
   }
 
   if (error || !swap) {
     return (
-      <MobileLayout
-        header={<MobileHeader showBack backHref="/swaps" />}
-        showBottomNav={false}
-      >
+      <div className="min-h-screen bg-gray-50">
+        <MobileHeader showBack backHref="/swaps" />
         <div className="px-4 py-8">
           <Card className="p-8 text-center">
             <p className="text-red-600 mb-4">{error || 'Swap not found'}</p>
             <Button onClick={() => router.push('/swaps')}>Back to swaps</Button>
           </Card>
         </div>
-      </MobileLayout>
+      </div>
     )
   }
 
@@ -140,10 +135,8 @@ export default function SwapDetailPage({ params }: { params: { id: string } }) {
   const isOwnSwap = session?.user?.id === swap.createdBy.id
 
   return (
-    <MobileLayout
-      header={<MobileHeader showBack backHref="/swaps" title="Swap Details" />}
-      showBottomNav={false}
-    >
+    <div className="min-h-screen bg-gray-50">
+      <MobileHeader showBack backHref="/swaps" title="Swap Details" />
       <div className="px-4 py-4 space-y-4 pb-28">
         {/* Person Card */}
         <Card className="p-4">
@@ -397,6 +390,6 @@ export default function SwapDetailPage({ params }: { params: { id: string } }) {
           )}
         </div>
       </ModalSheet>
-    </MobileLayout>
+    </div>
   )
 }

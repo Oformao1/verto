@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { MobileLayout } from '@/components/layout/MobileLayout'
 import { MobileHeader } from '@/components/layout/MobileHeader'
 import { Button, Input, Textarea, Select, Card, Avatar, Badge, Spinner, ModalSheet, Pill } from '@/components/ui'
 import { getTierBadge } from '@/lib/tiers'
@@ -98,12 +97,6 @@ export default function ProfilePage() {
   const [referralLink, setReferralLink] = useState('')
 
   useEffect(() => {
-    if (authStatus === 'unauthenticated') {
-      router.push('/login?callbackUrl=/profile')
-    }
-  }, [authStatus, router])
-
-  useEffect(() => {
     if (profile?.referralCode) {
       setReferralLink(`${window.location.origin}/signup?ref=${profile.referralCode}`)
     }
@@ -182,13 +175,14 @@ export default function ProfilePage() {
     }
   }
 
-  if (authStatus === 'loading' || loading) {
+  if (loading) {
     return (
-      <MobileLayout header={<MobileHeader title="Profile" />}>
+      <>
+        <MobileHeader title="Profile" />
         <div className="flex items-center justify-center py-20">
           <Spinner size="lg" />
         </div>
-      </MobileLayout>
+      </>
     )
   }
 
@@ -203,20 +197,18 @@ export default function ProfilePage() {
       : 0
 
   return (
-    <MobileLayout
-      header={
-        <MobileHeader
-          rightAction={
-            <button
-              onClick={() => router.push('/settings')}
-              className="p-2 rounded-full hover:bg-gray-100"
-            >
-              <Settings className="w-5 h-5 text-gray-600" />
-            </button>
-          }
-        />
-      }
-    >
+    <>
+      <MobileHeader
+        rightAction={
+          <button
+            onClick={() => router.push('/settings')}
+            className="p-2 rounded-full hover:bg-gray-100"
+          >
+            <Settings className="w-5 h-5 text-gray-600" />
+          </button>
+        }
+      />
+
       <div className="px-4 py-4 space-y-4">
         {/* Profile Header Card */}
         <Card className="p-4">
@@ -253,14 +245,12 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Bio */}
           {profile.bio && (
             <p className="text-gray-600 text-sm mt-4 leading-relaxed">
               {profile.bio}
             </p>
           )}
 
-          {/* Quick info */}
           <div className="flex flex-wrap gap-x-4 gap-y-2 mt-4 text-sm text-gray-500">
             {profile.city && (
               <div className="flex items-center gap-1.5">
@@ -318,7 +308,6 @@ export default function ProfilePage() {
           </div>
 
           <div className="space-y-3">
-            {/* Email verification */}
             <div className="flex items-center justify-between py-2 border-b border-gray-100">
               <div className="flex items-center gap-3">
                 <Mail className="w-4 h-4 text-gray-400" />
@@ -336,7 +325,6 @@ export default function ProfilePage() {
               )}
             </div>
 
-            {/* Phone verification */}
             <div className="flex items-center justify-between py-2 border-b border-gray-100">
               <div className="flex items-center gap-3">
                 <Phone className="w-4 h-4 text-gray-400" />
@@ -354,7 +342,6 @@ export default function ProfilePage() {
               )}
             </div>
 
-            {/* Vouches */}
             <button
               onClick={() => setShowVouchesModal(true)}
               className="flex items-center justify-between py-2 w-full"
@@ -443,19 +430,17 @@ export default function ProfilePage() {
                       <p className="font-medium text-gray-900 text-sm truncate">
                         {review.reviewer.name}
                       </p>
-                      <div className="flex items-center gap-2">
-                        <div className="flex">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-3 h-3 ${
-                                i < review.rating
-                                  ? 'text-yellow-500 fill-yellow-500'
-                                  : 'text-gray-300'
-                              }`}
-                            />
-                          ))}
-                        </div>
+                      <div className="flex">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-3 h-3 ${
+                              i < review.rating
+                                ? 'text-yellow-500 fill-yellow-500'
+                                : 'text-gray-300'
+                            }`}
+                          />
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -464,11 +449,6 @@ export default function ProfilePage() {
                   )}
                 </div>
               ))}
-              {reviews.length > 3 && (
-                <Button variant="ghost" className="w-full text-primary">
-                  View all {reviews.length} reviews
-                </Button>
-              )}
             </div>
           )}
         </Card>
@@ -491,7 +471,6 @@ export default function ProfilePage() {
           </Card>
         )}
 
-        {/* Member since */}
         <p className="text-center text-xs text-gray-400 py-4">
           Member since {formatDate(profile.createdAt)}
         </p>
@@ -620,6 +599,6 @@ export default function ProfilePage() {
           )}
         </div>
       </ModalSheet>
-    </MobileLayout>
+    </>
   )
 }
