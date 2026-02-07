@@ -11,6 +11,7 @@ const DEMO_USER = {
 const DEMO_PASSWORD = 'demo123'
 
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET,
   providers: [
     CredentialsProvider({
       name: 'credentials',
